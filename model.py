@@ -71,7 +71,45 @@ class LayerNormalization(nn.Module):
 
         def __init__(self, d_model: int, d_ff: int, dropout: float) -> None:
             super().__init__()
-            
+            self.linear_1 = nn.Linear(d.model, d_ff) #W1 and B1
+            self.dropout = nn.Dropout(dropout)
+            self.linear_2 nn.Linear(d_ff, d_model) # W2 and B2
+
+        def forward(self, x):
+            # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_ff) --> (Batch, Seq_Len, d_model)
+            return self.linear_2(self.dropout(torch.relu(self.linear_1(x))))
+
+class MultiHeadAttentionBlock(nn.Module):
+
+    def __init__(self, d_model: int, h: int, dropout: float) -> None:
+        super().__init__()
+        self.d_model = d_model
+        self.h = h #h is number of heads
+        assert d_model % h == 0, "d_model is not divisiable by h"
+
+        self.d_k = d_model // h
+        self.w_q = nn.Linear(d_model, d_model) #Wq
+        self.w_k = nn.Linear(d_model, d_model) #Wk
+        self.w_v = nn.Linear(d_model, d_model) #Wv
+
+        self.w_o = nn.Linear(d_model, d_model) #Wo
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, q, k, v, mask):
+        # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_model)
+        query = self.w_q(q) 
+        key = self.w_k(k)
+        value = self.w_v(v)
+
+        # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_model) --> (Batch, h, Seq_Len, d_k)
+        query = quary.view(query.shape[0], query.shape[1], self.h, self.d_k).transpose(1, 2)
+        key = key.view(key.shape[0], key.shape[1], self.h, self.d_k).transpose(1, 2)
+        value = value.view(value.shape[0], value.shape[1], self.h, self.d_k).transpose(1, 2)
+
+
+
+
+
 
 
 
