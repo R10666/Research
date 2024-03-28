@@ -67,17 +67,17 @@ class LayerNormalization(nn.Module):
             std = x.std(dim = -1, keepdim = True)
             return self.alpha * (x - mean) / (std + self.eps) + self.bias #formula for normalization 
 
-    class FeedFordwardBlock(nn.Module):
+class FeedFordwardBlock(nn.Module):
 
-        def __init__(self, d_model: int, d_ff: int, dropout: float) -> None:
-            super().__init__()
-            self.linear_1 = nn.Linear(d.model, d_ff) #W1 and B1
-            self.dropout = nn.Dropout(dropout)
-            self.linear_2 nn.Linear(d_ff, d_model) # W2 and B2
+    def __init__(self, d_model: int, d_ff: int, dropout: float) -> None:
+        super().__init__()
+        self.linear_1 = nn.Linear(d.model, d_ff) #W1 and B1
+        self.dropout = nn.Dropout(dropout)
+        self.linear_2 nn.Linear(d_ff, d_model) # W2 and B2
 
-        def forward(self, x):
-            # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_ff) --> (Batch, Seq_Len, d_model)
-            return self.linear_2(self.dropout(torch.relu(self.linear_1(x))))
+    def forward(self, x):
+        # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_ff) --> (Batch, Seq_Len, d_model)
+        return self.linear_2(self.dropout(torch.relu(self.linear_1(x))))
 
 class MultiHeadAttentionBlock(nn.Module):
 
@@ -106,6 +106,34 @@ class MultiHeadAttentionBlock(nn.Module):
         key = key.view(key.shape[0], key.shape[1], self.h, self.d_k).transpose(1, 2)
         value = value.view(value.shape[0], value.shape[1], self.h, self.d_k).transpose(1, 2)
 
+        x, self.attention_scores = MultiHeadAttentionBlock.attention(query, key, value, mask, self.dropout)
+
+        #(Batch, h, seq_Len, d_k) --> (Batch, Seq_Len, h, d_k) --> (Batch, Seq_Len, d_model)
+        x = x.transpose(1, 2).contiguous().view(x.shape[0], -1, self.h * self.d_k)
+
+        # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_model)
+        return self.w_o(x)
+
+
+
+class ResidualConnection(nn.Module):
+
+    def __init__(self, dropout: float) -> None:
+        super().__init__()
+        self.dropout = nn.Dropout(dropout)
+        self.norm = LayerNormalization()
+
+    def forward(self, x, sublayer):
+        return x + self.dropout(sublayer(self.norm(x)))
+
+
+class Encoder Block(nn.Module):
+
+    def __init__(self, self_attention_block: MultiHeadAttentionBlock, feed_forward_block: FeedFordwardBlock, droupout: float) -> None:
+        super().__init__() 
+        self.self_attention_block = self_attention_block
+        self.feed_forward_block = feed_forward_block
+        self.residual_connections = nn.ModuleList([ResidualConnection(dropout) for _ in range(2)])
 
 
 
