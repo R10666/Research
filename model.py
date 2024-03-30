@@ -222,7 +222,8 @@ class Transformer(nn.Module):
 
 def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int = 512, N: int = 6, h; int = 8, droupout: float = 0.1, d_ff: int = 2048) -> Transformer:
     # Create the embedding layers
-    src_embed = InputEmbeddings(d_model, src_vocab_size)
+    src_embed = InputEmbedd
+    ings(d_model, src_vocab_size)
     tgt_embed = InputEmbeddings(d_model, tgt_vocab_size)
 
     # Create the positional encoding layers
@@ -235,7 +236,8 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
         encoder_self_attention_block = MultiHeadAttentionBlock(d_model, h, dropout)
         feed_forward_block = FeedFordwardBlock(d_model, d_ff, dropout)
         encoder_block = EncoderBlock(encoder_self_attention_block, feed_forward_block, dropout)
-        encoder_blocks.append(encoder_block)
+        encoder_
+        blocks.append(encoder_block)
 
     # Create the decoder blocks
     decoder_blocks = []
@@ -261,7 +263,7 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
         if p.dim() > 1:
             nn.init.xavier_uniform_(p)
 
-    return transformer
+    return transformer 
 
 
 
