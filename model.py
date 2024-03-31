@@ -37,7 +37,7 @@ class PositionalEncoding(nn.Module):
         pe = torch.zeros(seq_len, d_model)
         # Create a vector of shape (seq_len)
         position = torch.arange(0, seq_len, dtype = torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arrange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)) # (d_model / 2)
 
         #sin for even, cos for odd
         pe[:, 0::2] = torch.sin(position * div_term) # sin(position * (10000 ** (2i / d_model))
@@ -160,7 +160,7 @@ class DecoderBlock(nn.Module):
         self.self_attention_block = self_attention_block
         self.cross_attention_block = cross_attention_block
         self.feed_forward_block = feed_forward_block
-        self.residual_connections = nn.Module([ResidualConnection(dropout) for _ in range(3)])
+        self.residual_connections = nn.ModuleList([ResidualConnection(dropout) for _ in range(3)])
 
 
     def forward(self, x, encoder_output, src_mask, tgt_mask):
@@ -235,20 +235,19 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
         encoder_self_attention_block = MultiHeadAttentionBlock(d_model, h, dropout)
         feed_forward_block = FeedForwardBlock(d_model, d_ff, dropout)
         encoder_block = EncoderBlock(encoder_self_attention_block, feed_forward_block, dropout)
-        encoder_
-        blocks.append(encoder_block)
+        encoder_blocks.append(encoder_block)
 
     # Create the decoder blocks
     decoder_blocks = []
     for _ in range(N):
         decoder_self_attention_block = MultiHeadAttentionBlock(d_model, h, dropout)
         decoder_cross_attention_block = MultiHeadAttentionBlock(d_model, h, dropout)
-        feed_forward_block = DecoderBlock(d_model, d_ff, dropout)
+        feed_forward_block = FeedForwardBlock(d_model, d_ff, dropout)
         decoder_block = DecoderBlock(decoder_self_attention_block, decoder_cross_attention_block, feed_forward_block, dropout)
         decoder_blocks.append(decoder_block)
 
     # Create the encoder and the decoder
-    encoder = Encoder(nn.MultiHeadAttentionBlock(encoder_blocks))
+    encoder = Encoder(nn.ModuleList(encoder_blocks))
     decoder = Decoder(nn.ModuleList(decoder_blocks))
 
     # Create the projection layer

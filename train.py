@@ -92,7 +92,7 @@ def train_model(config):
     #Tensorboard
     writer = SummaryWriter(config["experiment_name"])
 
-    optimizer = torch.optim.Adam(model.parameters(), lr = confign["lr"], eps = 1e-9)
+    optimizer = torch.optim.Adam(model.parameters(), lr = config["lr"], eps = 1e-9)
 
     initial_epoch = 0 
     global_step = 0 
