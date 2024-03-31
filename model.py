@@ -19,7 +19,7 @@ class InputEmbeddings(nn.Module):
         self.embedding = nn.Embedding(volcab_size, d_model) # word inputs -> vectors
 
 
-    def forward(self, x)
+    def forward(self, x):
         return self.embedding(x) * math.sqrt(embedding)
 
 
@@ -73,7 +73,7 @@ class FeedFordwardBlock(nn.Module):
         super().__init__()
         self.linear_1 = nn.Linear(d.model, d_ff) #W1 and B1
         self.dropout = nn.Dropout(dropout)
-        self.linear_2 nn.Linear(d_ff, d_model) # W2 and B2
+        self.linear_2 = nn.Linear(d_ff, d_model) # W2 and B2
 
     def forward(self, x):
         # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_ff) --> (Batch, Seq_Len, d_model)
@@ -127,7 +127,7 @@ class ResidualConnection(nn.Module):
         return x + self.dropout(sublayer(self.norm(x)))
 
 
-class Encoder Block(nn.Module):
+class EncoderBlock(nn.Module):
 
     def __init__(self, self_attention_block: MultiHeadAttentionBlock, feed_forward_block: FeedFordwardBlock, droupout: float) -> None:
         super().__init__() 
@@ -220,7 +220,7 @@ class Transformer(nn.Module):
         return self.projection_layer(x)
 
 
-def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int = 512, N: int = 6, h; int = 8, droupout: float = 0.1, d_ff: int = 2048) -> Transformer:
+def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int = 512, N: int = 6, h: int = 8, droupout: float = 0.1, d_ff: int = 2048) -> Transformer:
     # Create the embedding layers
     src_embed = InputEmbedd
     ings(d_model, src_vocab_size)

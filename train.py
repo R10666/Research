@@ -5,11 +5,8 @@ from torch.utils.data import Dataset, DataLoader, random_split
 from dataset import BilingualDataset, causal_mask
 from model import build_transformer
 
-from datasets import load_dataset
-from tokenizers import Tokenizer
-from tokenizers.models import WordLevel
-from tokenizers.trainers import WordLevelTrainer
-from tokenizers.pre_tokenizers import Whitespace
+from config import get_weights_file_path, get_config
+
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -18,8 +15,14 @@ from tqdm import tqdm
 
 from pathlib import Path
 
+from datasets import load_dataset
+from tokenizers import Tokenizer
+from tokenizers.models import WordLevel
+from tokenizers.trainers import WordLevelTrainer
+from tokenizers.pre_tokenizers import Whitespace
 
-def get _all_sentences(ds, lang):
+
+def get_all_sentences(ds, lang):
     for item in ds:
         yield item["translation"][lang]
 
@@ -38,7 +41,7 @@ def get_or_build_tokenizer(config, ds, lang):
 
 
 def get_ds(config):
-    ds_raw = load_dataset("opus_books", f"{config["lang_src"]}-config["lang_tgt"]}", split = "train")
+    ds_raw = load_dataset("opus_books", f'{config["lang_src"]}-{config["lang_tgt"]}', split = "train")
 
     # Build tokenizers
     tokenizer_src = get_or_build_tokenizer(config, ds_raw, config["lang_src"])
@@ -77,10 +80,10 @@ def get_model(config, vocab_src_len, vocab_tgt_len):
 
 def train_model(config):
     # Define the device
-    device = torch.device("cuda" if torch.cuda.is_aviliable() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device {device}")
 
-    Path(config{"model_folder"}).mkdir(parents = True, exist_ok = True)
+    Path(config["model_folder"]).mkdir(parents = True, exist_ok = True)
 
     train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt = get_ds(config)
     model = get_model(config, tokenizer_src.get_vocab_size(), tokenizer_tgt.get_vocab_size()).to(device)

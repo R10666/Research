@@ -1,3 +1,5 @@
+from pathlib import Path
+
 def get_config():
     return {
         "batch_size": 8,
@@ -6,7 +8,7 @@ def get_config():
         "seq_len": 350,
         "d_model": 512,
         "lang_src": "en",
-        "lang_tgt": "zh",
+        "lang_tgt": "fr",
         "model_folder": "weights",
         "model_filename": "tmodel_",
         "preload": None,
