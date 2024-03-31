@@ -20,7 +20,7 @@ class InputEmbeddings(nn.Module):
 
 
     def forward(self, x):
-        return self.embedding(x) * math.sqrt(embedding)
+        return self.embedding(x) * math.sqrt(self.d_model)
 
 
 ##positional encoding##
@@ -62,10 +62,10 @@ class LayerNormalization(nn.Module):
         self.alpha = nn.Parameter(torch.ones(1)) #multiply ,nn.Parameter allows for learning
         self.bias = nn.Parameter(torch.zeros(1)) #added
 
-        def forward(self, x):
-            mean = x.mean(dim = -1, keepdim = True)
-            std = x.std(dim = -1, keepdim = True)
-            return self.alpha * (x - mean) / (std + self.eps) + self.bias #formula for normalization 
+    def forward(self, x):
+        mean = x.mean(dim = -1, keepdim = True)
+        std = x.std(dim = -1, keepdim = True)
+        return self.alpha * (x - mean) / (std + self.eps) + self.bias #formula for normalization 
 
 class FeedForwardBlock(nn.Module):
 
@@ -91,9 +91,22 @@ class MultiHeadAttentionBlock(nn.Module):
         self.w_q = nn.Linear(d_model, d_model) #Wq
         self.w_k = nn.Linear(d_model, d_model) #Wk
         self.w_v = nn.Linear(d_model, d_model) #Wv
-
         self.w_o = nn.Linear(d_model, d_model) #Wo
         self.dropout = nn.Dropout(dropout)
+
+    @staticmethod
+    def attention(query, key, value, mask, dropout: nn.Dropout):
+        d_k = query.shape[-1]
+
+        attention_scores = (query @ key.transpose(-2, -1)) / math.sqrt(d_k)
+        if mask is not None:
+            attention_scores.masked_fill_(mask == 0, -1e9)
+        attention_scores = attention_scores.softmax(dim = -1) # (Batch, h, seq_len, seq_len)
+        if dropout is not None:
+            attention_scores = dropout(attention_scores)
+
+        return (attention_scores @ value), attention_scores
+
 
     def forward(self, q, k, v, mask):
         # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_model)
@@ -102,7 +115,7 @@ class MultiHeadAttentionBlock(nn.Module):
         value = self.w_v(v)
 
         # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_model) --> (Batch, h, Seq_Len, d_k)
-        query = quary.view(query.shape[0], query.shape[1], self.h, self.d_k).transpose(1, 2)
+        query = query.view(query.shape[0], query.shape[1], self.h, self.d_k).transpose(1, 2)
         key = key.view(key.shape[0], key.shape[1], self.h, self.d_k).transpose(1, 2)
         value = value.view(value.shape[0], value.shape[1], self.h, self.d_k).transpose(1, 2)
 

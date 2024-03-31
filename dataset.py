@@ -34,7 +34,7 @@ class BilingualDataset(Dataset):
         enc_num_padding_tokens = self.seq_len - len(enc_input_tokens) - 2
         dec_num_padding_tokens = self.seq_len - len(dec_input_tokens) - 1
 
-        if enc_num_padding_tokens < 0 or dec_num_padding_tokens:
+        if enc_num_padding_tokens < 0 or dec_num_padding_tokens < 0:
             raise ValueError("Sentence is too long")
 
         # Add SOS and EOS to theh source text
@@ -65,7 +65,7 @@ class BilingualDataset(Dataset):
 
         assert encoder_input.size(0) == self.seq_len
         assert decoder_input.size(0) == self.seq_len
-        assert lable.size(0) == self.seq_len
+        assert label.size(0) == self.seq_len
 
         return {
             "encoder_input": encoder_input, # (Seq_Len)

@@ -117,7 +117,7 @@ def train_model(config):
             decoder_mask = batch["decoder_mask"].to(device) # (B, 1, Seq_Len, Seq_Len)
 
             # Run the tensors through the transformer
-            encoder_output = model.encode(encode_input, encoder_mask) # (B, Seq_Len, d_model)
+            encoder_output = model.encode(encoder_input, encoder_mask) # (B, Seq_Len, d_model)
             decovder_output = model.decode(encoder_output, encoder_mask, decoder_input, decoder_mask) # (B, Seq_Len, d_model)
             proj_output = model.project(decoder_output) # (B, Seq_Len, tgt_vocab_size)
 
