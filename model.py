@@ -36,7 +36,7 @@ class PositionalEncoding(nn.Module):
         # Create  a matrix of shape (seq_len, d_model)
         pe = torch.zeros(seq_len, d_model)
         # Create a vector of shape (seq_len)
-        position = torch.arange(0, seq_len, dtype = torch)
+        position = torch.arange(0, seq_len, dtype = torch.float).unsqueeze(1)
         div_term = torch.exp(torch.arrange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
 
         #sin for even, cos for odd
@@ -71,7 +71,7 @@ class FeedForwardBlock(nn.Module):
 
     def __init__(self, d_model: int, d_ff: int, dropout: float) -> None:
         super().__init__()
-        self.linear_1 = nn.Linear(d.model, d_ff) #W1 and B1
+        self.linear_1 = nn.Linear(d_model, d_ff) #W1 and B1
         self.dropout = nn.Dropout(dropout)
         self.linear_2 = nn.Linear(d_ff, d_model) # W2 and B2
 
