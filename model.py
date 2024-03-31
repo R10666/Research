@@ -13,7 +13,7 @@ import torch.nn as nn
 class InputEmbeddings(nn.Module):
 
     def __init__(self, d_model: int, volcab_size: int): #constructor 
-        super().__int__()
+        super().__init__()
         self.d_model = d_model
         self.volcab_size = volcab_size
         self.embedding = nn.Embedding(volcab_size, d_model) # word inputs -> vectors
@@ -67,7 +67,7 @@ class LayerNormalization(nn.Module):
             std = x.std(dim = -1, keepdim = True)
             return self.alpha * (x - mean) / (std + self.eps) + self.bias #formula for normalization 
 
-class FeedFordwardBlock(nn.Module):
+class FeedForwardBlock(nn.Module):
 
     def __init__(self, d_model: int, d_ff: int, dropout: float) -> None:
         super().__init__()
@@ -129,7 +129,7 @@ class ResidualConnection(nn.Module):
 
 class EncoderBlock(nn.Module):
 
-    def __init__(self, self_attention_block: MultiHeadAttentionBlock, feed_forward_block: FeedFordwardBlock, droupout: float) -> None:
+    def __init__(self, self_attention_block: MultiHeadAttentionBlock, feed_forward_block: FeedForwardBlock, dropout: float) -> None:
         super().__init__() 
         self.self_attention_block = self_attention_block
         self.feed_forward_block = feed_forward_block
@@ -155,7 +155,7 @@ class Encoder(nn.Module):
 
 class DecoderBlock(nn.Module):
 
-    def __init__(self, self_attention_block: MultiHeadAttentionBlock, cross_attention_block: MultiHeadAttentionBlock, feed_forward_block: FeedFordwardBlock, dropout: float) -> None:
+    def __init__(self, self_attention_block: MultiHeadAttentionBlock, cross_attention_block: MultiHeadAttentionBlock, feed_forward_block: FeedForwardBlock, dropout: float) -> None:
         super().__init__()
         self.self_attention_block = self_attention_block
         self.cross_attention_block = cross_attention_block
@@ -220,10 +220,9 @@ class Transformer(nn.Module):
         return self.projection_layer(x)
 
 
-def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int = 512, N: int = 6, h: int = 8, droupout: float = 0.1, d_ff: int = 2048) -> Transformer:
+def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int = 512, N: int = 6, h: int = 8, dropout: float = 0.1, d_ff: int = 2048) -> Transformer:
     # Create the embedding layers
-    src_embed = InputEmbedd
-    ings(d_model, src_vocab_size)
+    src_embed = InputEmbeddings(d_model, src_vocab_size)
     tgt_embed = InputEmbeddings(d_model, tgt_vocab_size)
 
     # Create the positional encoding layers
@@ -234,7 +233,7 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
     encoder_blocks = []
     for _ in range(N):
         encoder_self_attention_block = MultiHeadAttentionBlock(d_model, h, dropout)
-        feed_forward_block = FeedFordwardBlock(d_model, d_ff, dropout)
+        feed_forward_block = FeedForwardBlock(d_model, d_ff, dropout)
         encoder_block = EncoderBlock(encoder_self_attention_block, feed_forward_block, dropout)
         encoder_
         blocks.append(encoder_block)
