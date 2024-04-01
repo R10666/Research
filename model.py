@@ -190,10 +190,10 @@ class Decoder(nn.Module):
         self.layers = layers
         self.norm = LayerNormalization()
 
-        def forward(self, x, encoder_output, src_mask, tgt_mask):
-            for layer in self.layers:
-                x = layer(x, encoder_output, src_mask, tgt_mask)
-            return self.norm(x)
+    def forward(self, x, encoder_output, src_mask, tgt_mask):
+        for layer in self.layers:
+            x = layer(x, encoder_output, src_mask, tgt_mask)
+        return self.norm(x)
 
 
 class ProjectionLayer(nn.Module):
@@ -202,9 +202,9 @@ class ProjectionLayer(nn.Module):
         super().__init__()
         self.proj = nn.Linear(d_model, volcab_size)
 
-        def forward(self, x):
-            # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, Vocab_Size)
-            return torch.log_softmax(self.proj(x), dim = -1)
+    def forward(self, x):
+        # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, Vocab_Size)
+        return torch.log_softmax(self.proj(x), dim = -1)
 
 
 class Transformer(nn.Module):

@@ -118,17 +118,17 @@ def train_model(config):
 
             # Run the tensors through the transformer
             encoder_output = model.encode(encoder_input, encoder_mask) # (B, Seq_Len, d_model)
-            decovder_output = model.decode(encoder_output, encoder_mask, decoder_input, decoder_mask) # (B, Seq_Len, d_model)
+            decoder_output = model.decode(encoder_output, encoder_mask, decoder_input, decoder_mask) # (B, Seq_Len, d_model)
             proj_output = model.project(decoder_output) # (B, Seq_Len, tgt_vocab_size)
 
             label = batch["label"].to(device) # (B, Seq_Len)
 
             # (B, Seq_Len, tgt_vocab_size) --> (B * Seq_Len, tgt_vocab_size)
             loss = loss_fn(proj_output.view(-1, tokenizer_tgt.get_vocab_size()), label.view(-1))
-            batch_iterator.set_postfix({f"{loss.item():6.3f}"})
+            batch_iterator.set_postfix({"loss": f"{loss.item():6.3f}"})
 
             # Log the loss
-            writer.add_scaler("train loss", loss.item(), global_step)
+            writer.add_scalar("train loss", loss.item(), global_step)
             writer.flush()
 
             # Backpropagate the loss
