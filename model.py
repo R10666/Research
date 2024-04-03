@@ -10,13 +10,14 @@ import torch #tensor calculation
 import torch.nn as nn
 
 ##Token embedding##
+##Takes the Token IDs and apply the input embeddings (now you have a matrix)##
 class InputEmbeddings(nn.Module):
 
     def __init__(self, d_model: int, volcab_size: int): #constructor 
         super().__init__()
         self.d_model = d_model
         self.volcab_size = volcab_size
-        self.embedding = nn.Embedding(volcab_size, d_model) # word inputs -> vectors
+        self.embedding = nn.Embedding(volcab_size, d_model) # word inputs (Token ID) -> vectors
 
 
     def forward(self, x):
