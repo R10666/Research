@@ -12,14 +12,14 @@ import torch.nn as nn
 ##Token embedding##
 ##Takes the Token IDs and apply the input embeddings (now you have a matrix)##
 class InputEmbeddings(nn.Module):
-
+    ## this function doesn't retun anything ##
     def __init__(self, d_model: int, volcab_size: int): #constructor 
         super().__init__()
         self.d_model = d_model
         self.volcab_size = volcab_size
         self.embedding = nn.Embedding(volcab_size, d_model) # word inputs (Token ID) -> vectors
 
-
+    ## this function determines the ouput of class ##
     def forward(self, x):
         return self.embedding(x) * math.sqrt(self.d_model)
 
