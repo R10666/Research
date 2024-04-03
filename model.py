@@ -13,6 +13,7 @@ import torch.nn as nn
 ##Takes the Token IDs and apply the input embeddings (now you have a matrix)##
 class InputEmbeddings(nn.Module):
     ## this function doesn't retun anything ##
+    ## first ststameent here as 'self' ignored while in use -- (d_model,volcab_size) ##
     def __init__(self, d_model: int, volcab_size: int): #constructor 
         super().__init__()
         self.d_model = d_model
