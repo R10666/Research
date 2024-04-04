@@ -47,14 +47,15 @@ class PositionalEncoding(nn.Module):
         pe[:, 0::2] = torch.sin(position * div_term) # sin(position * (10000 ** (2i / d_model))
         pe[:, 1::2] = torch.cos(position * div_term) # cos(position * (10000 ** (2i / d_model))
 
-        # Add a batch dimension to the positional encoding
+        # Add a batch dimension (now it is 3D) to the positional encoding
         pe = pe.unsqueeze(0) # (1, seq_len, d_model)
         
         self.register_buffer('pe', pe) # save the positional encoding as a buffer
 
     def forward(self, x):
-        x = x + (self.pe[:, :x.shape[1], :]).requires_grad_(False) #add positional encoding to itself, also no learn since fixed
-        return self.dropout(x)
+        #add positional encoding to itself
+        x = x + (self.pe[:, :x.shape[1], :]).requires_grad_(False) # False -> means no learn since this process is fixed 
+        return self.dropout(x) #
 
 
 
