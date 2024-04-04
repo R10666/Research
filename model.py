@@ -20,7 +20,7 @@ class InputEmbeddings(nn.Module):
         self.volcab_size = volcab_size
         self.embedding = nn.Embedding(volcab_size, d_model) # word inputs (Token ID) -> vectors
         ## how does nn.Embedding access the semantic information? Is it language specific? ##
-    
+
     ## this function takes input and ouputs for this class ##
     def forward(self, x):
         return self.embedding(x) * math.sqrt(self.d_model) #this is how is done on the papers
@@ -85,6 +85,7 @@ class FeedForwardBlock(nn.Module):
         # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_ff) --> (Batch, Seq_Len, d_model)
         return self.linear_2(self.dropout(torch.relu(self.linear_1(x))))
 
+
 class MultiHeadAttentionBlock(nn.Module):
 
     def __init__(self, d_model: int, h: int, dropout: float) -> None:
@@ -102,7 +103,7 @@ class MultiHeadAttentionBlock(nn.Module):
 
     @staticmethod    # function belong to the class itself instead of a instance, does not need a instance to call
     def attention(query, key, value, mask, dropout: nn.Dropout):
-        d_k = query.shape[-1]
+        d_k = query.shape[-1] # brings to the last but WHY and how it applies for a number? 
 
         attention_scores = (query @ key.transpose(-2, -1)) / math.sqrt(d_k) # normalization, @ is matrix multiplication
         if mask is not None:   # if masking is defined, not relavent for encoder, but this will work as masked multi head attention for decoder
