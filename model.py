@@ -33,8 +33,8 @@ class PositionalEncoding(nn.Module):
         super().__init__()
         self.d_model = d_model
         self.seq_len = seq_len
-        self.dropout = nn.Dropout(dropout) #dropout - reduce dependency on neaurons to help model learn
-
+        self.dropout = nn.Dropout(dropout) #dropout - reduce dependency on neurons to help model learn
+        # probability density of dropping a neuron, defined to be between 0 and 1 
 
         # Create  a matrix of shape (seq_len, d_model)
         pe = torch.zeros(seq_len, d_model)
