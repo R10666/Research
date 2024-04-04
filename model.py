@@ -23,7 +23,7 @@ class InputEmbeddings(nn.Module):
     
     ## this function takes input and ouputs for this class ##
     def forward(self, x):
-        return self.embedding(x) * math.sqrt(self.d_model) # this is how is done on the papers
+        return self.embedding(x) * math.sqrt(self.d_model) #this is how is done on the papers
 
 
 ##positional encoding##
