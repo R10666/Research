@@ -55,7 +55,7 @@ class PositionalEncoding(nn.Module):
     def forward(self, x):
         #add positional encoding to itself
         x = x + (self.pe[:, :x.shape[1], :]).requires_grad_(False) # False -> means no learn since this process is fixed 
-        return self.dropout(x) #
+        return self.dropout(x) # it drops out, but WHY?
 
 
 
