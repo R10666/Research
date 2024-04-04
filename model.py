@@ -170,6 +170,7 @@ class EncoderBlock(nn.Module):
 
 ########################
 
+## WHY THIS PART IS NEEDED AND HOW DOES IT 
 ##Encoder##
 # made of n number of encoder blocks
 class Encoder(nn.Module):
