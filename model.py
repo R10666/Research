@@ -72,14 +72,15 @@ class LayerNormalization(nn.Module):
         std = x.std(dim = -1, keepdim = True)
         return self.alpha * (x - mean) / (std + self.eps) + self.bias #formula for normalization 
 
+## FF linear block ##
 class FeedForwardBlock(nn.Module):
-
+    ## 2 linear layers as convolutions##
     def __init__(self, d_model: int, d_ff: int, dropout: float) -> None:
         super().__init__()
         self.linear_1 = nn.Linear(d_model, d_ff) #W1 and B1
         self.dropout = nn.Dropout(dropout)
         self.linear_2 = nn.Linear(d_ff, d_model) # W2 and B2
-
+    ## 2 linear layers and ReLU activation for just first layer and dropout in between layers but not after second layer##
     def forward(self, x):
         # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_ff) --> (Batch, Seq_Len, d_model)
         return self.linear_2(self.dropout(torch.relu(self.linear_1(x))))
