@@ -112,7 +112,7 @@ class MultiHeadAttentionBlock(nn.Module):
         if dropout is not None:
             attention_scores = dropout(attention_scores)
 
-        return (attention_scores @ value), attention_scores #multiply attention score by value
+        return (attention_scores @ value), attention_scores #multiply attention score by value -- end of softmax operation
 
 
     def forward(self, q, k, v, mask):
