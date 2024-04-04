@@ -114,7 +114,7 @@ class MultiHeadAttentionBlock(nn.Module):
 
         return (attention_scores @ value), attention_scores #multiply attention score by value -- end of softmax operation
 
-
+    ##  SYNTAX NEEDS TO BE UNDERSTOOD CLEARLLY ! ##
     def forward(self, q, k, v, mask):
         # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, d_model)
         query = self.w_q(q) 
