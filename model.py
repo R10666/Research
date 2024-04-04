@@ -19,7 +19,7 @@ class InputEmbeddings(nn.Module):
         self.d_model = d_model
         self.volcab_size = volcab_size
         self.embedding = nn.Embedding(volcab_size, d_model) # word inputs (Token ID) -> vectors
-        ## how does nn.Embedding access the semantic information? ##
+        ## how does nn.Embedding access the semantic information? Is it language specific? ##
     
     ## this function determines the ouput of class ##
     def forward(self, x):
