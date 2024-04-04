@@ -14,7 +14,7 @@ import torch.nn as nn
 class InputEmbeddings(nn.Module):
     ## this function doesn't retun anything ##
     ## first ststameent here as 'self' ignored while in use -- (d_model,volcab_size) ##
-    def __init__(self, d_model: int, volcab_size: int): #constructor 
+    def __init__(self, d_model: int, volcab_size: int): #constructor, constructs on 'self' 
         super().__init__()
         self.d_model = d_model
         self.volcab_size = volcab_size
