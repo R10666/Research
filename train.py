@@ -14,32 +14,39 @@ from torch.utils.tensorboard import SummaryWriter
 import warnings
 from tqdm import tqdm
 
-from pathlib import Path
+from pathlib import Path # used to define path to files  
 
-from datasets import load_dataset
-from tokenizers import Tokenizer
+from datasets import load_dataset # to get the langauge dataset
+from tokenizers import Tokenizer # from hugging face 
 from tokenizers.models import WordLevel
 from tokenizers.trainers import WordLevelTrainer
 from tokenizers.pre_tokenizers import Whitespace
 
+######################
 
 def get_all_sentences(ds, lang):
     for item in ds:
-        yield item["translation"][lang]
+        yield item["translation"][lang] #get the wanted langauge from dataset
 
+######################
 
 def get_or_build_tokenizer(config, ds, lang):
-    tokenizer_path = Path(config["tokenizer_file"].format(lang))
-    if not Path.exists(tokenizer_path):
-        tokenizer = Tokenizer(WordLevel(unk_token = "[UNK]"))
-        tokenizer.pre_tokenizers = Whitespace()
-        trainer = WordLevelTrainer(special_tokens = ["[UNK]", "[PAD]", "[SOS]", "[EOS]"], min_frequency = 2)
-        tokenizer.train_from_iterator(get_all_sentences(ds, lang), trainer = trainer)
-        tokenizer.save(str(tokenizer_path))
+    tokenizer_path = Path(config["tokenizer_file"].format(lang)) # Path to where tokenizer file is saved, format allow for variable inside filename
+    if not Path.exists(tokenizer_path):  # create one if file does not exist, file will be generated in current dir
+        tokenizer = Tokenizer(WordLevel(unk_token = "[UNK]")) # if word is not know to tokenizer's vocabulary, it will be given a [UNK] token
+        tokenizer.pre_tokenizers = Whitespace() #split by whitespace, so each word is a token
+        trainer = WordLevelTrainer(special_tokens = ["[UNK]", "[PAD]", "[SOS]", "[EOS]"], min_frequency = 2) #WordLevelTrainer means one token each word
+        #[PAD] = padding, used for training
+        #[SOS] = start of sentence
+        #[EOS] = end of sentence 
+        #min_frequency is the minmium number of time a word has to appear for it to be in the vocabulary
+        tokenizer.train_from_iterator(get_all_sentences(ds, lang), trainer = trainer) #training
+        tokenizer.save(str(tokenizer_ptah)) #save once done
     else:
         tokenizer = Tokenizer.from_file(str(tokenizer_path))
     return tokenizer
 
+######################
 
 def get_ds(config):
     ds_raw = load_dataset("opus_books", f'{config["lang_src"]}-{config["lang_tgt"]}', split = "train")
@@ -154,8 +161,3 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
     config = get_config()
     train_model(config)
-
-
-
-
-

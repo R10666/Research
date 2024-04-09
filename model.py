@@ -283,7 +283,7 @@ class Transformer(nn.Module):
         self.tgt_pos = tgt_pos
         self.projection_layer = projection_layer
 
-#Forward()# #we split forward into three for better visualizing 
+#Forward()# #we split forward into three for better visualizing, also during inferencing we can reuse the output of the encoder
 
     def encode(self, src, src_mask):
         src = self.src_embed(src) #embeding
@@ -303,7 +303,8 @@ class Transformer(nn.Module):
 ########################
 
 ##Transformer Block Constructor##
-def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int = 512, N: int = 6, h: int = 8, dropout: float = 0.1, d_ff: int = 2048) -> Transformer:
+#combines everything together
+def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int = 512, N: int = 6, h: int = 8, dropout: float = 0.1, d_ff: int = 2048) -> Transformer: #all numbers from paper
     # Create the embedding layers
     src_embed = InputEmbeddings(d_model, src_vocab_size)
     tgt_embed = InputEmbeddings(d_model, tgt_vocab_size)
@@ -314,23 +315,23 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
 
     # Create the encoder blocks
     encoder_blocks = []
-    for _ in range(N):
+    for _ in range(N): # N number of encoder block, 
         encoder_self_attention_block = MultiHeadAttentionBlock(d_model, h, dropout)
         feed_forward_block = FeedForwardBlock(d_model, d_ff, dropout)
         encoder_block = EncoderBlock(encoder_self_attention_block, feed_forward_block, dropout)
-        encoder_blocks.append(encoder_block)
+        encoder_blocks.append(encoder_block) # save in array 
 
     # Create the decoder blocks
     decoder_blocks = []
     for _ in range(N):
         decoder_self_attention_block = MultiHeadAttentionBlock(d_model, h, dropout)
-        decoder_cross_attention_block = MultiHeadAttentionBlock(d_model, h, dropout)
+        decoder_cross_attention_block = MultiHeadAttentionBlock(d_model, h, dropout) #has a cross attention
         feed_forward_block = FeedForwardBlock(d_model, d_ff, dropout)
         decoder_block = DecoderBlock(decoder_self_attention_block, decoder_cross_attention_block, feed_forward_block, dropout)
-        decoder_blocks.append(decoder_block)
+        decoder_blocks.append(decoder_block) # save in array 
 
     # Create the encoder and the decoder
-    encoder = Encoder(nn.ModuleList(encoder_blocks))
+    encoder = Encoder(nn.ModuleList(encoder_blocks)) # create and save 1 instance
     decoder = Decoder(nn.ModuleList(decoder_blocks))
 
     # Create the projection layer
@@ -342,7 +343,7 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
     # Initialize the parameters
     for p in transformer.parameters():
         if p.dim() > 1:
-            nn.init.xavier_uniform_(p)
+            nn.init.xavier_uniform_(p) #other method aviliable too, this is most common
 
     return transformer 
 
