@@ -1,7 +1,7 @@
 ### IMPORTS ###
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader, random_split
+from torch.utils.data import Dataset, DataLoader, random_split  # allow for loading data and splitting data
 
 from dataset import BilingualDataset, causal_mask
 from model import build_transformer
@@ -25,7 +25,7 @@ from tokenizers.pre_tokenizers import Whitespace
 ######################
 
 def get_all_sentences(ds, lang):
-    for item in ds:
+    for item in ds:  # for the dataset we are using here each item is a pair of sentence, one in sorce lang, and one in tgt lang
         yield item["translation"][lang] #get the wanted langauge from dataset
 
 ######################
@@ -49,17 +49,16 @@ def get_or_build_tokenizer(config, ds, lang):
 ######################
 
 def get_ds(config):
-    ds_raw = load_dataset("opus_books", f'{config["lang_src"]}-{config["lang_tgt"]}', split = "train")
+    ds_raw = load_dataset("opus_books", f'{config["lang_src"]}-{config["lang_tgt"]}', split = "train") #get the dataset(training), split means only that part of the dataset is loaded
 
     # Build tokenizers
-    tokenizer_src = get_or_build_tokenizer(config, ds_raw, config["lang_src"])
-    tokenizer_tgt = get_or_build_tokenizer(config, ds_raw, config["lang_tgt"])
+    tokenizer_src = get_or_build_tokenizer(config, ds_raw, config["lang_src"]) #tokenize source
+    tokenizer_tgt = get_or_build_tokenizer(config, ds_raw, config["lang_tgt"]) #tokenize target
 
     # Keep 90% for training and 10% for validation
     train_ds_size = int(0.9 * len(ds_raw))
     val_ds_size = len(ds_raw) - train_ds_size
-    train_ds_raw, val_ds_raw = random_split(ds_raw, [train_ds_size, val_ds_size])
-
+    train_ds_raw, val_ds_raw = random_split(ds_raw, [train_ds_size, val_ds_size]) #this splits the dataset into the two specified size
 
     train_ds = BilingualDataset(train_ds_raw, tokenizer_src, tokenizer_tgt, config["lang_src"], config["lang_tgt"], config["seq_len"])
     val_ds = BilingualDataset(val_ds_raw, tokenizer_src, tokenizer_tgt, config["lang_src"], config["lang_tgt"], config["seq_len"])
