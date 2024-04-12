@@ -76,16 +76,18 @@ class BilingualDataset(Dataset):
         assert decoder_input.size(0) == self.seq_len
         assert label.size(0) == self.seq_len
 
+        # This is basically what our dataset consistes of:
         return {
             "encoder_input": encoder_input, # (Seq_Len)
             "decoder_input": decoder_input, # (Seq_Len)
-            "encoder_mask": (encoder_input != self.pad_token).unsqueeze(0).unsqueeze(0).int(), # (1, 1, Seq_Len)
+            # encoder mask is for padding and decoder mask is for both padding as well as non-causal terms
+            "encoder_mask": (encoder_input != self.pad_token).unsqueeze(0).unsqueeze(0).int(), # (1, 1, Seq_Len), this is needed since there may be padding in encoder
             "decoder_mask": (decoder_input != self.pad_token).unsqueeze(0).unsqueeze(0).int() & causal_mask(decoder_input.size(0)), # (1, Seq_Len) & (1, Seq_Len, Seq_Len)
             "label": label, # (Seq_Len)
             "src_text": src_text,
             "tgt_text": tgt_text    
         }
 
-def causal_mask(size):
+def causal_mask(size): # this will diagonalize the matrix to mask the future terms
     mask = torch.triu(torch.ones(1, size, size), diagonal = 1).type(torch.int)
     return mask == 0
