@@ -9,7 +9,7 @@ from model import build_transformer
 from config import get_weights_file_path, get_config
 
 
-from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter #Visualisation when training model
 
 import warnings
 from tqdm import tqdm
@@ -98,17 +98,18 @@ def train_model(config):
 
     Path(config["model_folder"]).mkdir(parents = True, exist_ok = True) #find or create the model folder 
 
-    train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt = get_ds(config)
+    train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt = get_ds(config) #get data
     model = get_model(config, tokenizer_src.get_vocab_size(), tokenizer_tgt.get_vocab_size()).to(device) # get model and transfer to device
 
     #Tensorboard, This bascially gives a visual progress bar and stuff when training
     writer = SummaryWriter(config["experiment_name"])
 
-    optimizer = torch.optim.Adam(model.parameters(), lr = config["lr"], eps = 1e-9)
+    # optimizer used to adjust parameters of model to minimize the loss function during training process
+    optimizer = torch.optim.Adam(model.parameters(), lr = config["lr"], eps = 1e-9) # uses the Adam algorthum for optimizing
 
     initial_epoch = 0 
     global_step = 0 
-    if config["preload"]:
+    if config["preload"]: # This allows for continuing training after a crash or stop, we just need to define a starting epoch
         model_filename = get_weights_file_path(config, config["preload"])
         print(f"Preloading model {model_filename}")
         state = torch.load(model_filename)
@@ -116,11 +117,15 @@ def train_model(config):
         optimizer.load_state_dict(state["optimizer_state_dict"])
         global_step = state["global_step"]
 
-    loss_fn = nn.CrossEntropyLoss(ignore_index = tokenizer_src.token_to_id("[PAD]"), label_smoothing = 0.1).to(device)
+    ## cross entropy loss, measures difference between predicted probability distribution and actual distribution of target labels.
+    loss_fn = nn.CrossEntropyLoss(ignore_index = tokenizer_src.token_to_id("[PAD]"), label_smoothing = 0.1).to(device) 
+    # ^ignore padding when calculating, smoothing reduce the confidence (overfeed). ^this mean every high probability will have 0.1 taken and given to others.
 
+
+    ## Traing loop ##
     for epoch in range(initial_epoch, config["num_epochs"]):
         model.train()
-        batch_iterator = tqdm(train_dataloader, desc = f"processing epoch {epoch:02d}")
+        batch_iterator = tqdm(train_dataloader, desc = f"processing epoch {epoch:02d}") # this is the progress bar
         for batch in batch_iterator:
 
             encoder_input = batch["encoder_input"].to(device) # (B, Seq_Len)
