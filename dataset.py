@@ -46,16 +46,16 @@ class BilingualDataset(Dataset):
             raise ValueError("Sentence is too long") # check if sentence is longer than sequence length that we choose
 
         # Add SOS and EOS to theh source text
-        encoder_input = torch.cat(
+        encoder_input = torch.cat( # This builds the input tensor for encoder
             [
-                self.sos_token,
-                torch.tensor(enc_input_tokens, dtype = torch.int64),
-                self.eos_token,
-                torch.tensor([self.pad_token] * enc_num_padding_tokens, dtype = torch.int64)
+                self.sos_token, # add start of sentence token 
+                torch.tensor(enc_input_tokens, dtype = torch.int64), # add all token of source text
+                self.eos_token,  # add end of sentence
+                torch.tensor([self.pad_token] * enc_num_padding_tokens, dtype = torch.int64) # fills the rest of empty space with padding token
             ]
         )
 
-        decoder_input = torch.cat(
+        decoder_input = torch.cat( # This builds the input tensor for decoder, no end of sentence for this one
             [
                 self.sos_token,
                 torch.tensor(dec_input_tokens, dtype = torch.int64),
@@ -63,7 +63,7 @@ class BilingualDataset(Dataset):
             ]
         )
 
-        label = torch.cat(
+        label = torch.cat( # label is the expected output of decoder, this is sometimes also called target
             [
                 torch.tensor(dec_input_tokens, dtype = torch.int64),
                 self.eos_token,
@@ -71,6 +71,7 @@ class BilingualDataset(Dataset):
             ]
         )
 
+        # sanity check
         assert encoder_input.size(0) == self.seq_len
         assert decoder_input.size(0) == self.seq_len
         assert label.size(0) == self.seq_len
