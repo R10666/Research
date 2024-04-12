@@ -93,15 +93,15 @@ def get_model(config, vocab_src_len, vocab_tgt_len):
 
 def train_model(config):
     # Define the device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # check if GPU parallel processing is aviliable
     print(f"Using device {device}")
 
-    Path(config["model_folder"]).mkdir(parents = True, exist_ok = True)
+    Path(config["model_folder"]).mkdir(parents = True, exist_ok = True) #find or create the model folder 
 
     train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt = get_ds(config)
-    model = get_model(config, tokenizer_src.get_vocab_size(), tokenizer_tgt.get_vocab_size()).to(device)
+    model = get_model(config, tokenizer_src.get_vocab_size(), tokenizer_tgt.get_vocab_size()).to(device) # get model and transfer to device
 
-    #Tensorboard
+    #Tensorboard, This bascially gives a visual progress bar and stuff when training
     writer = SummaryWriter(config["experiment_name"])
 
     optimizer = torch.optim.Adam(model.parameters(), lr = config["lr"], eps = 1e-9)
