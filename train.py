@@ -128,11 +128,15 @@ def train_model(config):
         batch_iterator = tqdm(train_dataloader, desc = f"processing epoch {epoch:02d}") # this is the progress bar
         for batch in batch_iterator:
 
+            #get tensor
             encoder_input = batch["encoder_input"].to(device) # (B, Seq_Len)
             decoder_input = batch["decoder_input"].to(device) # (B, Seq_Len)
-            encoder_mask = batch["encoder_mask"].to(device) # (B, 1, 1, Seq_Len)
-            decoder_mask = batch["decoder_mask"].to(device) # (B, 1, Seq_Len, Seq_Len)
+            
+            #get mask
+            encoder_mask = batch["encoder_mask"].to(device) # (B, 1, 1, Seq_Len), only hide padding token
+            decoder_mask = batch["decoder_mask"].to(device) # (B, 1, Seq_Len, Seq_Len), hide padding and future word
 
+            
             # Run the tensors through the transformer
             encoder_output = model.encode(encoder_input, encoder_mask) # (B, Seq_Len, d_model)
             decoder_output = model.decode(encoder_output, encoder_mask, decoder_input, decoder_mask) # (B, Seq_Len, d_model)
@@ -140,11 +144,11 @@ def train_model(config):
 
             label = batch["label"].to(device) # (B, Seq_Len)
 
-            # (B, Seq_Len, tgt_vocab_size) --> (B * Seq_Len, tgt_vocab_size)
+            # (B, Seq_Len, tgt_vocab_size) --> (B * Seq_Len, tgt_vocab_size), this format the size to be compatable with label to calc loss
             loss = loss_fn(proj_output.view(-1, tokenizer_tgt.get_vocab_size()), label.view(-1))
-            batch_iterator.set_postfix({"loss": f"{loss.item():6.3f}"})
+            batch_iterator.set_postfix({"loss": f"{loss.item():6.3f}"}) #put loss calculated onto progress bar
 
-            # Log the loss
+            # Log the loss tensor board
             writer.add_scalar("train loss", loss.item(), global_step)
             writer.flush()
 
@@ -157,7 +161,7 @@ def train_model(config):
 
             global_step += 1
 
-        # Save the model at the end of every epoch
+        # Save the model at the end of every epoch into file
         model_filename = get_weights_file_path(config, f'{epoch:02d}')
         torch.save({
             "epoch": epoch,
@@ -166,7 +170,7 @@ def train_model(config):
             "global_step": global_step
             }, model_filename)
 
-
+# ignore error
 if __name__ == "__main__":
     warnings.filterwarnings("ignore")
     config = get_config()
