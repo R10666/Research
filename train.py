@@ -23,15 +23,18 @@ from tokenizers.trainers import WordLevelTrainer
 from tokenizers.pre_tokenizers import Whitespace
 
 ######################
-
+## 
 def greedy_decode(model, source, source_mask, toeknizer_src, tokenizer_tgt, max_len, device):
     sos_idx = tokenizer_tgt.token_to_id("[SOS]")
     eos_idx = tokenizer_tgt.token_to_id("[EOS]")
 
-    # Precompute the encoder outptu and reuse it for every token we get from the decoder
+    # Precompute the encoder output and reuse it for every token we get from the decoder
     encoder_output = model.encode(source, source_mask)
+
+    # inferencing: give decoder the previous token -> decoder output next token -> add onto decoder input, repeat
     # Initialize the decoder input with the sos token
     decoder_input = torch.empty(1, 1).fill_(sos_idx).type_as(source).to(device)
+    # inferencing happend until eos or max_len reached
     while True:
         if decoder_input.size(1) == max_len:
             break
@@ -40,21 +43,29 @@ def greedy_decode(model, source, source_mask, toeknizer_src, tokenizer_tgt, max_
         decoder_mask = causal_mask(decoder_input.size(1)).type_as(source_mask).to(device)
 
         # Calculate the output of the decoder
-        out = model.project(out[:,-1])
+        out = model.decode(encoder_output, source_mask, decoder_input, decoder_mask)
 
+        # Get the next token
+        prob = model.project(out[:,-1])
+ 
         # Select the token with the max probability (beacuse it is a greedy search)
         _, next_word = torch.max(prob, dim = 1)
+
+        # append onto the next decoder input
         decoder_input = torch.cat([decoder_input, torch.empty(1, 1).type_as(source).fill_(next_word.item()).to(device)], dim = 1)
 
-        if next_word == eos_idx:
+        if next_word == eos_idx: #stop of end of sentence is reached
             break 
 
-    return decoder_input.squeeze(0)
+    return decoder_input.squeeze(0) #remove batch dimension
 
 ######################
 
-def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, device, print_msg, global_state, num_examples = 2):
-    model.eval()
+## Vaildation loop##
+# validation allow us to visualize the training process
+                # inference 2 sentence hence num_example = 2
+def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, device, print_msg, global_state, writer, num_examples = 2):
+    model.eval() # evaluation mode 
     count = 0
 
     # source_text = []
@@ -62,15 +73,16 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
     # predicted = []
 
     # Size of the control window (just use a default value)
-    console_width = 50
+    console_width = 80
 
+    # we want inferencing only, no training
     with torch.no_grad():
-        for batch in validation_ds:
+        for batch in validation_ds: #get input and mask from our validation data set
             count += 1
             encoder_input = batch["encoder_input"].to(device)
             encoder_mask = batch["encoder_mask"].to(device)
 
-            assert encoder_input.size(0) ==  "Batch size must be 1 for validation"
+            assert encoder_input.size(0) == 1, "Batch size must be 1 for validation"
 
             model_out = greedy_decode(model, encoder_input, encoder_mask, tokenizer_src, tokenizer_tgt, max_len, device)
 
