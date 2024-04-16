@@ -88,13 +88,13 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
 
             source_text = batch["src_text"][0]
             target_text = batch["tgt_text"][0]
-            model_out_text = tokenizer_tgt.decode(model_out.detach().cpu().numpy())
+            model_out_text = tokenizer_tgt.decode(model_out.detach().cpu().numpy()) # convert token back into text
 
             # source_text.append(source_text)
             # expected.append(target_text)
             # predicted.append(model_out_text)
 
-            # Print to the console
+            # Print to the console, we use this special print to not interupt with our progress bar
             print_msg("-"*console_width)
             print_msg(f"SOURCE: {source_text}")
             print_msg(f"TARGET: {target_text}")
@@ -102,6 +102,10 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
 
             if count == num_examples:
                 break
+
+    #Optimization that's not 100% necessary:           
+    # if writer:
+    #     #TorchMetrics CharErrorRate, BLEU, WordErrorRate
 
 ######################
 
@@ -243,6 +247,7 @@ def train_model(config):
             optimizer.step()
             optimizer.zero_grad()
 
+            #runs the validation loop
             run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
 
             global_step += 1
