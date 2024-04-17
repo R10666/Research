@@ -1,4 +1,11 @@
 ### IMPORTS ###
+# import sys
+# sys.stdout.encoding = 'utf-8'
+
+# import locale
+# locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+
+
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, random_split  # allow for loading data and splitting data
@@ -214,6 +221,7 @@ def train_model(config):
         # model.train() #before we added validation
         batch_iterator = tqdm(train_dataloader, desc = f"processing epoch {epoch:02d}") # this is the progress bar
         for batch in batch_iterator:
+            
             model.train() #we moved it into this loop so after validation it goes back into training
 
             #get tensor
