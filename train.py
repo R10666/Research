@@ -47,7 +47,7 @@ def greedy_decode(model, source, source_mask, toeknizer_src, tokenizer_tgt, max_
             break
 
         # build mask for the target (decoder input)
-        decoder_mask = causal_mask(decoder_input.size(1)).type_as(source_mask).to(device)
+        decoder_mask = causal_mask(decoder_input.size(1)).type_as(source_mask).to(device) #No padding, as EOS or max_len will be reached first
 
         # Calculate the output of the decoder
         out = model.decode(encoder_output, source_mask, decoder_input, decoder_mask)
@@ -75,7 +75,7 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
     model.eval() # evaluation mode 
     count = 0
 
-    # source_text = []
+    # source_texts = []
     # expected = []
     # predicted = []
 
@@ -97,7 +97,7 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
             target_text = batch["tgt_text"][0]
             model_out_text = tokenizer_tgt.decode(model_out.detach().cpu().numpy()) # convert token back into text
 
-            # source_text.append(source_text)
+            # source_texts.append(source_text)
             # expected.append(target_text)
             # predicted.append(model_out_text)
 
@@ -133,7 +133,7 @@ def get_or_build_tokenizer(config, ds, lang):
         #[EOS] = end of sentence 
         #min_frequency is the minmium number of time a word has to appear for it to be in the vocabulary
         tokenizer.train_from_iterator(get_all_sentences(ds, lang), trainer = trainer) #training
-        tokenizer.save(str(tokenizer_ptah)) #save once done
+        tokenizer.save(str(tokenizer_path)) #save once done
     else:
         tokenizer = Tokenizer.from_file(str(tokenizer_path))
     return tokenizer
@@ -207,7 +207,7 @@ def train_model(config):
         model_filename = get_weights_file_path(config, config["preload"])
         print(f"Preloading model {model_filename}")
         state = torch.load(model_filename)
-        initial_epoch = statee["epoch"] + 1
+        initial_epoch = state["epoch"] + 1
         optimizer.load_state_dict(state["optimizer_state_dict"])
         global_step = state["global_step"]
 
@@ -255,10 +255,11 @@ def train_model(config):
             optimizer.step()
             optimizer.zero_grad()
 
-            #runs the validation loop
-            run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
-
             global_step += 1
+
+        #runs the validation loop
+        run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
+
 
         # Save the model at the end of every epoch into file
         model_filename = get_weights_file_path(config, f'{epoch:02d}')
