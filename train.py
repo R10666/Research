@@ -9,6 +9,8 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, random_split  # allow for loading data and splitting data
+import torchtext.datasets as datasets
+from torch.optim.lr_scheduler import LambdaLR
 
 from dataset import BilingualDataset, causal_mask
 from model import build_transformer
@@ -20,7 +22,7 @@ from torch.utils.tensorboard import SummaryWriter #Visualisation when training m
 
 import warnings
 from tqdm import tqdm
-
+import os
 from pathlib import Path # used to define path to files  
 
 from datasets import load_dataset # to get the langauge dataset
@@ -29,8 +31,9 @@ from tokenizers.models import WordLevel
 from tokenizers.trainers import WordLevelTrainer
 from tokenizers.pre_tokenizers import Whitespace
 
+import torchmetrics
+
 ######################
-## 
 def greedy_decode(model, source, source_mask, toeknizer_src, tokenizer_tgt, max_len, device):
     sos_idx = tokenizer_tgt.token_to_id("[SOS]")
     eos_idx = tokenizer_tgt.token_to_id("[EOS]")
@@ -53,7 +56,7 @@ def greedy_decode(model, source, source_mask, toeknizer_src, tokenizer_tgt, max_
         out = model.decode(encoder_output, source_mask, decoder_input, decoder_mask)
 
         # Get the next token
-        prob = model.project(out[:,-1])
+        prob = model.project(out[:, -1])
  
         # Select the token with the max probability (beacuse it is a greedy search)
         _, next_word = torch.max(prob, dim = 1)
@@ -203,6 +206,7 @@ def train_model(config):
 
     initial_epoch = 0 
     global_step = 0 
+
     if config["preload"]: # This allows for continuing training after a crash or stop, we just need to define a starting epoch
         model_filename = get_weights_file_path(config, config["preload"])
         print(f"Preloading model {model_filename}")
@@ -255,10 +259,12 @@ def train_model(config):
             optimizer.step()
             optimizer.zero_grad()
 
+            run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
+
             global_step += 1
 
         #runs the validation loop
-        run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
+        #run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
 
 
         # Save the model at the end of every epoch into file
