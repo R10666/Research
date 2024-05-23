@@ -144,7 +144,7 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
         bleu = metric(predicted, expected)
         writer.add_scalar('validation BLEU', bleu, global_step)
         writer.flush()
-        
+
 ######################
 
 def get_all_sentences(ds, lang):
@@ -219,7 +219,7 @@ def get_model(config, vocab_src_len, vocab_tgt_len):
 def train_model(config):
     # Define the device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # check if GPU parallel processing is aviliable
-    print(f"Using device {device}")
+    print("Using device:", device)
 
     Path(config["model_folder"]).mkdir(parents = True, exist_ok = True) #find or create the model folder 
 
@@ -250,11 +250,11 @@ def train_model(config):
 
     ## Traing loop ##
     for epoch in range(initial_epoch, config["num_epochs"]):
-        # model.train() #before we added validation
+        model.train() #before we added validation
         batch_iterator = tqdm(train_dataloader, desc = f"processing epoch {epoch:02d}") # this is the progress bar
         for batch in batch_iterator:
             
-            model.train() #we moved it into this loop so after validation it goes back into training
+            #model.train() #we moved it into this loop so after validation it goes back into training
 
             #get tensor
             encoder_input = batch["encoder_input"].to(device) # (B, Seq_Len)
@@ -296,7 +296,7 @@ def train_model(config):
 
 
         # Save the model at the end of every epoch into file
-        model_filename = get_weights_file_path(config, f'{epoch:02d}')
+        model_filename = get_weights_file_path(config, f"{epoch:02d}")
         torch.save({
             "epoch": epoch,
             "model_state_dict": model.state_dict(),
