@@ -9,7 +9,6 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, random_split  # allow for loading data and splitting data
-import torchtext.datasets as datasets
 from torch.optim.lr_scheduler import LambdaLR
 
 from dataset import BilingualDataset, causal_mask
@@ -74,16 +73,27 @@ def greedy_decode(model, source, source_mask, toeknizer_src, tokenizer_tgt, max_
 ## Vaildation loop##
 # validation allow us to visualize the training process
                 # inference 2 sentence hence num_example = 2
-def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, device, print_msg, global_state, writer, num_examples = 2):
+def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, device, print_msg, global_step, writer, num_examples = 2):
     model.eval() # evaluation mode 
     count = 0
 
-    # source_texts = []
-    # expected = []
-    # predicted = []
+    source_texts = []
+    expected = []
+    predicted = []
 
-    # Size of the control window (just use a default value)
-    console_width = 80
+    #########experimental###########
+    try:
+        # get the console window width
+        with os.popen('stty size', 'r') as console:
+            _, console_width = console.read().split()
+            console_width = int(console_width)
+    except:
+        # If we can't get the console width, use 80 as default
+        console_width = 80
+
+    # # Size of the control window (just use a default value)
+    # console_width = 80
+    ################################
 
     # we want inferencing only, no training
     with torch.no_grad():
@@ -100,9 +110,9 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
             target_text = batch["tgt_text"][0]
             model_out_text = tokenizer_tgt.decode(model_out.detach().cpu().numpy()) # convert token back into text
 
-            # source_texts.append(source_text)
-            # expected.append(target_text)
-            # predicted.append(model_out_text)
+            source_texts.append(source_text)
+            expected.append(target_text)
+            predicted.append(model_out_text)
 
             # Print to the console, we use this special print to not interupt with our progress bar
             print_msg("-"*console_width)
@@ -111,12 +121,30 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
             print_msg(f"PREDICTED: {model_out_text}")
 
             if count == num_examples:
+                print_msg('-'*console_width)
                 break
 
     #Optimization that's not 100% necessary:           
-    # if writer:
-    #     #TorchMetrics CharErrorRate, BLEU, WordErrorRate
+    if writer:
+        # Evaluate the character error rate
+        # Compute the char error rate 
+        metric = torchmetrics.CharErrorRate()
+        cer = metric(predicted, expected)
+        writer.add_scalar('validation cer', cer, global_step)
+        writer.flush()
 
+        # Compute the word error rate
+        metric = torchmetrics.WordErrorRate()
+        wer = metric(predicted, expected)
+        writer.add_scalar('validation wer', wer, global_step)
+        writer.flush()
+
+        # Compute the BLEU metric
+        metric = torchmetrics.BLEUScore()
+        bleu = metric(predicted, expected)
+        writer.add_scalar('validation BLEU', bleu, global_step)
+        writer.flush()
+        
 ######################
 
 def get_all_sentences(ds, lang):
