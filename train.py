@@ -161,7 +161,7 @@ def get_or_build_tokenizer(config, ds, lang):
     tokenizer_path = Path(config["tokenizer_file"].format(lang)) # Path to where tokenizer file is saved, format allow for variable inside filename
     if not Path.exists(tokenizer_path):  # create one if file does not exist, file will be generated in current dir
         tokenizer = Tokenizer(WordLevel(unk_token = "[UNK]")) # if word is not know to tokenizer's vocabulary, it will be given a [UNK] token
-        tokenizer.pre_tokenizers = Whitespace() #split by whitespace, so each word is a token
+        tokenizer.pre_tokenizer = Whitespace() #split by whitespace, so each word is a token
         trainer = WordLevelTrainer(special_tokens = ["[UNK]", "[PAD]", "[SOS]", "[EOS]"], min_frequency = 2) #WordLevelTrainer means one token each word
         #[PAD] = padding, used for training
         #[SOS] = start of sentence
