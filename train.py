@@ -256,7 +256,7 @@ def train_model(config):
     ## Traing loop ##
     for epoch in range(initial_epoch, config["num_epochs"]):
         model.train() #before we added validation
-        batch_iterator = tqdm(train_dataloader, desc = f"processing epoch {epoch:02d}") # this is the progress bar
+        batch_iterator = tqdm(train_dataloader, desc = f"Processing Epoch {epoch:02d}") # this is the progress bar
         for batch in batch_iterator:
             
             #model.train() #we moved it into this loop so after validation it goes back into training
@@ -290,7 +290,7 @@ def train_model(config):
 
             # Update the weights
             optimizer.step()
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
 
             run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
 
