@@ -17,12 +17,12 @@ import torch.nn as nn
 #convert input into vector of size 512
 class InputEmbeddings(nn.Module):
     ## this function doesn't retun anything ##
-    ## first ststameent here as 'self' ignored while in use -- (d_model,volcab_size) ##
-    def __init__(self, d_model: int, volcab_size: int): #constructor 
+    ## first ststameent here as 'self' ignored while in use -- (d_model,vocab_size) ##
+    def __init__(self, d_model: int, vocab_size: int) -> None: #constructor 
         super().__init__()
         self.d_model = d_model  # d_model is the size/dimention of the vector
-        self.volcab_size = volcab_size #number of words in the vocabulary
-        self.embedding = nn.Embedding(volcab_size, d_model) # word inputs (Token ID) -> vectors
+        self.vocab_size = vocab_size #number of words in the vocabulary
+        self.embedding = nn.Embedding(vocab_size, d_model) # word inputs (Token ID) -> vectors
         ## how does nn.Embedding access the semantic information? Is it language specific? ##
 
     ## this function takes input and ouputs for this class ##    
@@ -80,7 +80,7 @@ class PositionalEncoding(nn.Module):
 # Calculate mean and var of each layer, then calculate mean and var using mean and var of each layer, also introduce bias 
 class LayerNormalization(nn.Module):
 
-    def __init__(self, eps: float = 10**-6) -> None: 
+    def __init__(self, eps:float = 10**-6) -> None: 
         super().__init__()
         self.eps = eps  #eps to make math stable if s.d is very small (eps repersent 0)
         self.alpha = nn.Parameter(torch.ones(1)) #multiply ,nn.Parameter allows for learning
@@ -120,7 +120,7 @@ class MultiHeadAttentionBlock(nn.Module):
         super().__init__()
         self.d_model = d_model #width of matrix 
         self.h = h  #h is number of heads
-        assert d_model % h == 0, "d_model is not divisiable by h" # make sure the width of matrix can be split evenly
+        assert d_model % h == 0, "d_model is not divisible by h" # make sure the width of matrix can be split evenly
 
         self.d_k = d_model // h  # each head
         self.w_q = nn.Linear(d_model, d_model) #Wq
@@ -257,10 +257,10 @@ class Decoder(nn.Module):
 
 ##Linear layer##
 class ProjectionLayer(nn.Module): # projects the embedding back into vocabulary 
-
-    def __init__(self, d_model: int, volcab_size: int) -> None:
+    def __init__(self, d_model, vocab_size) -> None:
+    #def __init__(self, d_model: int, vocab_size: int) -> None:
         super().__init__()
-        self.proj = nn.Linear(d_model, volcab_size)
+        self.proj = nn.Linear(d_model, vocab_size)
 
     def forward(self, x):
         # (Batch, Seq_Len, d_model) --> (Batch, Seq_Len, Vocab_Size)
@@ -290,7 +290,8 @@ class Transformer(nn.Module):
         src = self.src_pos(src) #positional encoding
         return self.encoder(src, src_mask) #encode
 
-    def decode(self, encoder_output, src_mask, tgt, tgt_mask):
+    #def decode(self, encoder_output, src_mask, tgt, tgt_mask):
+    def decode(self, encoder_output: torch.Tensor, src_mask: torch.Tensor, tgt: torch.Tensor, tgt_mask: torch.Tensor):
         tgt = self.tgt_embed(tgt)
         tgt = self.tgt_pos(tgt)
         return self.decoder(tgt, encoder_output, src_mask, tgt_mask) #decode
