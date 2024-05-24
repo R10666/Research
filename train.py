@@ -33,7 +33,7 @@ from tokenizers.pre_tokenizers import Whitespace
 import torchmetrics
 
 ######################
-def greedy_decode(model, source, source_mask, toeknizer_src, tokenizer_tgt, max_len, device):
+def greedy_decode(model, source, source_mask, tokenizer_src, tokenizer_tgt, max_len, device):
     sos_idx = tokenizer_tgt.token_to_id("[SOS]")
     eos_idx = tokenizer_tgt.token_to_id("[EOS]")
 
@@ -115,10 +115,14 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
             predicted.append(model_out_text)
 
             # Print to the console, we use this special print to not interupt with our progress bar
+            # print_msg("-"*console_width)
+            # print_msg(f"SOURCE: {source_text}")
+            # print_msg(f"TARGET: {target_text}")
+            # print_msg(f"PREDICTED: {model_out_text}")
             print_msg("-"*console_width)
-            print_msg(f"SOURCE: {source_text}")
-            print_msg(f"TARGET: {target_text}")
-            print_msg(f"PREDICTED: {model_out_text}")
+            print_msg(f"{f'SOURCE: ':>12}{source_text}")
+            print_msg(f"{f'TARGET: ':>12}{target_text}")
+            print_msg(f"{f'PREDICTED: ':>12}{model_out_text}")
 
             if count == num_examples:
                 print_msg('-'*console_width)
@@ -193,7 +197,7 @@ def get_ds(config):
     # Calculates the maximum sentence length of source and target from the tokens:
     for item in ds_raw:
         src_ids = tokenizer_src.encode(item["translation"][config["lang_src"]]).ids
-        tgt_ids = tokenizer_src.encode(item["translation"][config["lang_tgt"]]).ids
+        tgt_ids = tokenizer_tgt.encode(item["translation"][config["lang_tgt"]]).ids
         max_len_src = max(max_len_src, len(src_ids))
         max_len_tgt = max(max_len_tgt, len(tgt_ids))
 
@@ -239,6 +243,7 @@ def train_model(config):
         model_filename = get_weights_file_path(config, config["preload"])
         print(f"Preloading model {model_filename}")
         state = torch.load(model_filename)
+        model.load_state_dict(state['model_state_dict'])
         initial_epoch = state["epoch"] + 1
         optimizer.load_state_dict(state["optimizer_state_dict"])
         global_step = state["global_step"]
