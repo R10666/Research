@@ -1,0 +1,6 @@
+#!/bin/bash
+#PBS -l nodes=1:ppn=4
+# serial job on knot
+export NCORES=4
+cd $PBS_O_WORKDIR
+/home/j_teng/anaconda3/myenv/python3.12.exe train.py
