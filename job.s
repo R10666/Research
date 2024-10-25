@@ -2,6 +2,7 @@
 #SBATCH -J 'transformer_training_1'
 #SBATCH --nodes=1
 #SBATCH --ntasks=1 
+#SBATCH --cpus-per-task=8  
 #SBATCH -p gpu 
 #SBATCH --gres=gpu:3
 #SBATCH -o outLog 
