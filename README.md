@@ -23,3 +23,13 @@ pathlib
 
 #Start the ssh-agent automatically
 eval "$(ssh-agent -s)" > /dev/null
+
+for ImportError: /lib64/libstdc++.so.6: version CXXABI_1.3.9'
+refer to: https://stackoverflow.com/questions/49875588/importerror-lib64-libstdc-so-6-version-cxxabi-1-3-9-not-found
+
+other documentation:
+https://csc.cnsi.ucsb.edu/sites/default/files/2022-05/csc_quickstart.pdf
+https://csc.cnsi.ucsb.edu/sites/default/files/2023-03/Python_Parallel.pdf
+https://csc.cnsi.ucsb.edu/sites/default/files/2022-05/oct_23_intro_to_python_-_csc_fall_2018.pdf
+https://csc.cnsi.ucsb.edu/docs/python
+
