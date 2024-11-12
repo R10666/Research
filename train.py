@@ -32,8 +32,9 @@ from tokenizers.pre_tokenizers import Whitespace
 
 import torchmetrics
 
-######################
-def greedy_decode(model, source, source_mask, tokenizer_src, tokenizer_tgt, max_len, device):
+###########################################
+
+def greedy_decode(model, source, source_mask, tokenizer_src, tokenizer_tgt, max_len, device): #run encoder and decoder only once used for validation 
     sos_idx = tokenizer_tgt.token_to_id("[SOS]")
     eos_idx = tokenizer_tgt.token_to_id("[EOS]")
 
@@ -128,7 +129,7 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
                 print_msg('-'*console_width)
                 break
 
-    #Optimization that's not 100% necessary:           
+    #metrics            
     if writer:
         # Evaluate the character error rate
         # Compute the char error rate 
@@ -292,9 +293,9 @@ def train_model(config):
             optimizer.step()
             optimizer.zero_grad(set_to_none=True)
 
-            #run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
+            run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
 
-            global_step += 1
+            global_step += 1 #for tensorboard graphing
 
         #runs the validation loop
         run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)

@@ -19,7 +19,7 @@ class InputEmbeddings(nn.Module):
     ## this function doesn't retun anything ##
     ## first ststameent here as 'self' ignored while in use -- (d_model,vocab_size) ##
     def __init__(self, d_model: int, vocab_size: int) -> None: #constructor 
-        super().__init__()
+        super().__init__() #inheritance
         self.d_model = d_model  # d_model is the size/dimention of the vector
         self.vocab_size = vocab_size #number of words in the vocabulary
         self.embedding = nn.Embedding(vocab_size, d_model) # word inputs (Token ID) -> vectors
