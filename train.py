@@ -146,7 +146,7 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
 
         # Compute the BLEU metric
         metric = torchmetrics.BLEUScore()
-        bleu = metric(predicted, expected)
+        bleu = metric(predicted, [expected])
         writer.add_scalar('validation BLEU', bleu, global_step)
         writer.flush()
 
@@ -293,7 +293,7 @@ def train_model(config):
             optimizer.step()
             optimizer.zero_grad(set_to_none=True)
 
-            run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
+            #run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
 
             global_step += 1 #for tensorboard graphing
 
