@@ -2,13 +2,13 @@
 #SBATCH -J 'transformer_training_1'
 #SBATCH --nodes=1
 #SBATCH --ntasks=1 
-#SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=16G  
+#SBATCH --cpus-per-task=1 
+#SBATCH --mem-per-cpu=4G  
 #SBATCH -p gpu 
-#SBATCH --gres=gpu:3
+#SBATCH --gres=gpu:2
 #SBATCH -o outLog 
 #SBATCH -e errLog 
-#SBATCH -t 48:00:00 
+#SBATCH -t 2:00:00 
 #SBATCH --mail-user=j_teng@ucsb.edu 
 #SBATCH --mail-type ALL
 
@@ -20,4 +20,4 @@ source ~/anaconda3/etc/profile.d/conda.sh
 conda activate transformer
 
 cd $SLURM_SUBMIT_DIR
-python train.py
+python CUDA_testing.py

@@ -14,7 +14,7 @@ from torch.optim.lr_scheduler import LambdaLR
 from dataset import BilingualDataset, causal_mask
 from model import build_transformer
 
-from config import get_weights_file_path, get_config
+from settings import get_weights_file_path, get_config
 
 
 from torch.utils.tensorboard import SummaryWriter #Visualisation when training model
@@ -32,12 +32,18 @@ from tokenizers.pre_tokenizers import Whitespace
 
 import torchmetrics
 import matplotlib.pyplot as plt
+import csv
 
 #for plotting
 cer_values = []
 wer_values = []
 bleu_values = []
 epoch_values = []
+
+csv_file = "validation_scores.csv"
+with open(csv_file, mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["Epoch", "CER", "WER", "BLEU"])  # Header row
 
 ###########################################
 
@@ -160,6 +166,10 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
         writer.add_scalar('validation BLEU', bleu, global_step)
         writer.flush()
 
+        with open(csv_file, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([current_epoch, cer, wer, bleu])
+
 ######################
 
 def get_all_sentences(ds, lang):
@@ -168,8 +178,8 @@ def get_all_sentences(ds, lang):
 
 ######################
 
-def get_or_build_tokenizer(config, ds, lang):
-    tokenizer_path = Path(config["tokenizer_file"].format(lang)) # Path to where tokenizer file is saved, format allow for variable inside filename
+def get_or_build_tokenizer(settings, ds, lang):
+    tokenizer_path = Path(settings["tokenizer_file"].format(lang)) # Path to where tokenizer file is saved, format allow for variable inside filename
     if not Path.exists(tokenizer_path):  # create one if file does not exist, file will be generated in current dir
         tokenizer = Tokenizer(WordLevel(unk_token = "[UNK]")) # if word is not know to tokenizer's vocabulary, it will be given a [UNK] token
         tokenizer.pre_tokenizer = Whitespace() #split by whitespace, so each word is a token
@@ -186,13 +196,13 @@ def get_or_build_tokenizer(config, ds, lang):
 
 ######################
 
-def get_ds(config):
-    ds_raw = load_dataset("opus_books", f'{config["lang_src"]}-{config["lang_tgt"]}', split = "train") #get the dataset(training), split means only that part of the dataset is loaded
-    #ds_raw = load_dataset("Helsinki-NLP/opus_books", f'{config["lang_src"]}-{config["lang_tgt"]}', split = "train") #get the dataset(training), split means only that part of the dataset is loaded
+def get_ds(settings):
+    ds_raw = load_dataset("opus_books", f'{settings["lang_src"]}-{settings["lang_tgt"]}', split = "train") #get the dataset(training), split means only that part of the dataset is loaded
+    #ds_raw = load_dataset("Helsinki-NLP/opus_books", f'{settings["lang_src"]}-{settings["lang_tgt"]}', split = "train") #get the dataset(training), split means only that part of the dataset is loaded
 
     # Build tokenizers
-    tokenizer_src = get_or_build_tokenizer(config, ds_raw, config["lang_src"]) #tokenize source
-    tokenizer_tgt = get_or_build_tokenizer(config, ds_raw, config["lang_tgt"]) #tokenize target
+    tokenizer_src = get_or_build_tokenizer(settings, ds_raw, settings["lang_src"]) #tokenize source
+    tokenizer_tgt = get_or_build_tokenizer(settings, ds_raw, settings["lang_tgt"]) #tokenize target
 
     # Keep 90% for training and 10% for validation
     train_ds_size = int(0.9 * len(ds_raw))
@@ -200,16 +210,16 @@ def get_ds(config):
     train_ds_raw, val_ds_raw = random_split(ds_raw, [train_ds_size, val_ds_size]) #this splits the dataset into the two specified size
 
     # Build the two datasets
-    train_ds = BilingualDataset(train_ds_raw, tokenizer_src, tokenizer_tgt, config["lang_src"], config["lang_tgt"], config["seq_len"])
-    val_ds = BilingualDataset(val_ds_raw, tokenizer_src, tokenizer_tgt, config["lang_src"], config["lang_tgt"], config["seq_len"])
+    train_ds = BilingualDataset(train_ds_raw, tokenizer_src, tokenizer_tgt, settings["lang_src"], settings["lang_tgt"], settings["seq_len"])
+    val_ds = BilingualDataset(val_ds_raw, tokenizer_src, tokenizer_tgt, settings["lang_src"], settings["lang_tgt"], settings["seq_len"])
 
     max_len_src = 0
     max_len_tgt = 0
 
     # Calculates the maximum sentence length of source and target from the tokens:
     for item in ds_raw:
-        src_ids = tokenizer_src.encode(item["translation"][config["lang_src"]]).ids
-        tgt_ids = tokenizer_tgt.encode(item["translation"][config["lang_tgt"]]).ids
+        src_ids = tokenizer_src.encode(item["translation"][settings["lang_src"]]).ids
+        tgt_ids = tokenizer_tgt.encode(item["translation"][settings["lang_tgt"]]).ids
         max_len_src = max(max_len_src, len(src_ids))
         max_len_tgt = max(max_len_tgt, len(tgt_ids))
 
@@ -217,7 +227,7 @@ def get_ds(config):
     print(f'Max length of target sentence: {max_len_tgt}')
 
     # here we take data from our dataset to train and validate, done with DataLoader which iterates over the our datasets in batches
-    train_dataloader = DataLoader(train_ds, batch_size = config["batch_size"], shuffle = True) # shuffle means data is shuffled before batch created 
+    train_dataloader = DataLoader(train_ds, batch_size = settings["batch_size"], shuffle = True) # shuffle means data is shuffled before batch created 
     val_dataloader = DataLoader(val_ds, batch_size = 1, shuffle = True) # batch_size = 1 means that one sentence per batch
 
     return train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt
@@ -225,34 +235,34 @@ def get_ds(config):
 ######################
 
 # simple function to help call and build the model:
-def get_model(config, vocab_src_len, vocab_tgt_len):
-    model = build_transformer(vocab_src_len, vocab_tgt_len, config["seq_len"], config['seq_len'], d_model = config["d_model"])
+def get_model(settings, vocab_src_len, vocab_tgt_len):
+    model = build_transformer(vocab_src_len, vocab_tgt_len, settings["seq_len"], settings['seq_len'], d_model = settings["d_model"])
     return model
 
 ######################
 
 ## Training ##
-def train_model(config):
+def train_model(settings):
     # Define the device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # check if GPU parallel processing is aviliable
     print("Using device:", device)
 
-    Path(config["model_folder"]).mkdir(parents = True, exist_ok = True) #find or create the model folder 
+    Path(settings["model_folder"]).mkdir(parents = True, exist_ok = True) #find or create the model folder 
 
-    train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt = get_ds(config) #get data
-    model = get_model(config, tokenizer_src.get_vocab_size(), tokenizer_tgt.get_vocab_size()).to(device) # get model and transfer to device
+    train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt = get_ds(settings) #get data
+    model = get_model(settings, tokenizer_src.get_vocab_size(), tokenizer_tgt.get_vocab_size()).to(device) # get model and transfer to device
 
     #Tensorboard, This bascially gives a visual progress bar and stuff when training
-    writer = SummaryWriter(config["experiment_name"])
+    writer = SummaryWriter(settings["experiment_name"])
 
     # optimizer used to adjust parameters of model to minimize the loss function during training process
-    optimizer = torch.optim.Adam(model.parameters(), lr = config["lr"], eps = 1e-9) # uses the Adam algorthum for optimizing
+    optimizer = torch.optim.Adam(model.parameters(), lr = settings["lr"], eps = 1e-9) # uses the Adam algorthum for optimizing
 
     initial_epoch = 0 
     global_step = 0 
 
-    if config["preload"]: # This allows for continuing training after a crash or stop, we just need to define a starting epoch
-        model_filename = get_weights_file_path(config, config["preload"])
+    if settings["preload"]: # This allows for continuing training after a crash or stop, we just need to define a starting epoch
+        model_filename = get_weights_file_path(settings, settings["preload"])
         print(f"Preloading model {model_filename}")
         state = torch.load(model_filename)
         model.load_state_dict(state['model_state_dict'])
@@ -265,7 +275,7 @@ def train_model(config):
     # ^ignore padding when calculating, smoothing reduce the confidence (overfeed). ^this mean every high probability will have 0.1 taken and given to others.
 
     ## Traing loop ##
-    for epoch in range(initial_epoch, config["num_epochs"]):
+    for epoch in range(initial_epoch, settings["num_epochs"]):
         model.train() #before we added validation
         batch_iterator = tqdm(train_dataloader, desc = f"Processing Epoch {epoch:02d}") # this is the progress bar
         for batch in batch_iterator:
@@ -303,17 +313,17 @@ def train_model(config):
             optimizer.step()
             optimizer.zero_grad(set_to_none=True)
 
-            #run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
+            #run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, settings["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
 
             global_step += 1 #for tensorboard graphing
 
         #runs the validation loop
         epoch_values.append(epoch)
-        run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
+        run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, settings["seq_len"], device, lambda msg: batch_iterator.write(msg), global_step, writer)
 
 
         # Save the model at the end of every epoch into file
-        model_filename = get_weights_file_path(config, f"{epoch:02d}")
+        model_filename = get_weights_file_path(settings, f"{epoch:02d}")
         torch.save({
             "epoch": epoch,
             "model_state_dict": model.state_dict(),
@@ -326,30 +336,33 @@ def train_model(config):
         plt.plot(range(len(cer_values)), cer_values, marker='o', label='CER')
         plt.title('Character Error Rate (CER)')
         plt.xlabel('Epoch')
+        plt.xticks(epochs)
         plt.ylabel('CER')
         plt.grid(True)
         plt.legend()
-        plt.savefig('cer_plot_100.png')
+        plt.savefig('cer_plot.png')
 
         # Plot WER
         plt.figure()
         plt.plot(range(len(wer_values)), wer_values, marker='o', label='WER')
         plt.title('Word Error Rate (WER)')
         plt.xlabel('Epoch')
+        plt.xticks(epochs)
         plt.ylabel('WER')
         plt.grid(True)
         plt.legend()
-        plt.savefig('wer_plot_100.png')
+        plt.savefig('wer_plot.png')
 
         # Plot BLEU
         plt.figure()
         plt.plot(range(len(bleu_values)), bleu_values, marker='o', label='BLEU')
         plt.title('BLEU Score')
         plt.xlabel('Epoch')
+        plt.xticks(epochs)
         plt.ylabel('BLEU')
         plt.grid(True)
         plt.legend()
-        plt.savefig('bleu_plot_100.png')
+        plt.savefig('bleu_plot.png')
 
         # Optionally, close all plots to release memory
         plt.close('all')
@@ -360,5 +373,5 @@ def train_model(config):
 ## ignore error ##
 if __name__ == "__main__":
     warnings.filterwarnings("ignore")
-    config = get_config()
-    train_model(config)
+    settings = get_config()
+    train_model(settings)
