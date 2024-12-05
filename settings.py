@@ -9,13 +9,13 @@ def get_config():
         "seq_len": 490, # max sequence length for input. Rough and safe estimate = 350
         "d_model": 512, # diamention of hidden state, 512 from paper
         "lang_src": "en", # source langauge
-        "lang_tgt": "fr", # output langauge
-        "model_folder": "en_fr_weights", # name of folder where each training/epochs is stored
+        "lang_tgt": "it", # output langauge
+        "model_folder": "en_it_weights", # name of folder where each training/epochs is stored
         "model_basename": "tmodel_", # the name of file for each epoch
         #"preload": "35", # set a name of file to load and restart train if crash 
         "preload": None,
         "tokenizer_file": "tokenizer_{0}.json", # file for tokens
-        "experiment_name": "runs/en-fr" # just a name for tensorboard logging
+        "experiment_name": "runs/en-it" # just a name for tensorboard logging
     }
 
 #generate path and saves the weight files
